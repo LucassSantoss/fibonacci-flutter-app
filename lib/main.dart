@@ -74,6 +74,15 @@ class _FibonacciPageState extends State<FibonacciPage> {
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: ElevatedButton(
                       onPressed: () {
+                        if (int.parse(_controller.text) <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Número inválido'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
                         setState(() {
                           _fibonacci = fibonaci(int.parse(_controller.text));
                         });
