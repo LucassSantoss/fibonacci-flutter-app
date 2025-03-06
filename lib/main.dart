@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
       builder:
           (context) => MaterialApp(
             title: 'Fibonacci',
+            debugShowCheckedModeBanner: false,
             theme: ThemeData.dark(),
             home: FibonacciPage(),
           ),
