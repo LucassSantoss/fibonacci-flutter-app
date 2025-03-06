@@ -1,5 +1,6 @@
 import 'package:fibonacci/service/fibonacci.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 void main() {
@@ -35,13 +36,30 @@ class _FibonacciPageState extends State<FibonacciPage> {
   final TextEditingController _controller = TextEditingController();
   final GlobalKey _textFieldKey = GlobalKey();
   final GlobalKey _buttonKey = GlobalKey();
+  bool _showcaseEnabled = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ShowCaseWidget.of(context).startShowCase([_textFieldKey, _buttonKey]);
+    _loadShowcasePreference();
+  }
+
+  void _loadShowcasePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _showcaseEnabled = prefs.getBool('showcaseEnabled') ?? true;
     });
+
+    if (_showcaseEnabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase([_textFieldKey, _buttonKey]);
+      });
+    }
+  }
+
+  void _saveShowcasePreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('showcaseEnabled', value);
   }
 
   @override
@@ -65,7 +83,27 @@ class _FibonacciPageState extends State<FibonacciPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  SizedBox(height: 20),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Continuar mostrando as dicas?',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(width: 20),
+                      Switch(
+                        value: _showcaseEnabled,
+                        activeColor: Colors.purple,
+                        onChanged: (value) {
+                          setState(() {
+                            _showcaseEnabled = value;
+                          });
+                          _saveShowcasePreference(value);
+                        },
+                      ),
+                    ],
+                  ),
                   Text(
                     'Qual número da sequência de Fibonacci você deseja saber? (Começando em 1)',
                     style: TextStyle(fontSize: 20),
@@ -123,20 +161,49 @@ class _FibonacciPageState extends State<FibonacciPage> {
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
+                            Row(
+                              children: [
+                                Text(
+                                  'Continuar mostrando as dicas?',
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                                SizedBox(width: 20),
+                                Switch(
+                                  value: _showcaseEnabled,
+                                  activeColor: Colors.purple,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _showcaseEnabled = value;
+                                    });
+                                    _saveShowcasePreference(value);
+                                  },
+                                ),
+                              ],
+                            ),
                             ElevatedButton(
                               onPressed: () {
                                 ShowCaseWidget.of(context).dismiss();
                               },
                               style: ButtonStyle(
-                                padding: WidgetStateProperty.all(EdgeInsets.symmetric(horizontal: 25, vertical: 5,)),
-                                backgroundColor: WidgetStateProperty.all(Colors.purple),
+                                padding: WidgetStateProperty.all(
+                                  EdgeInsets.symmetric(
+                                    horizontal: 25,
+                                    vertical: 5,
+                                  ),
+                                ),
+                                backgroundColor: WidgetStateProperty.all(
+                                  Colors.purple,
+                                ),
                                 shape: WidgetStateProperty.all(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
                               ),
-                              child: Text('Entendi!', style: TextStyle(color: Colors.white),),
+                              child: Text(
+                                'Entendi!',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
@@ -153,7 +220,9 @@ class _FibonacciPageState extends State<FibonacciPage> {
                             return;
                           }
                           setState(() {
-                            _fibonacci = dynamicFibonacci(int.parse(_controller.text));
+                            _fibonacci = dynamicFibonacci(
+                              int.parse(_controller.text),
+                            );
                           });
                         },
                         style: ElevatedButton.styleFrom(
